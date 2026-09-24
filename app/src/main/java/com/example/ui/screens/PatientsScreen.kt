@@ -32,6 +32,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.TableView
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,6 +49,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -326,6 +330,9 @@ fun PatientsScreen(
                             val msg = "مرحباً ${patient.name}، نود تذكيركم بمراجعة حسابكم في عيادة الرحمن، المتبقي: ${String.format(Locale.US, "%,.0f", patient.remainingBalance)} $currency."
                             viewModel.openSmsApp(context, patient.phone, msg)
                         },
+                        autoSaveEnabled = viewModel.isPatientAutoSaveEnabled(patient.id),
+                        onAutoSaveChanged = { enabled -> viewModel.setPatientAutoSave(patient.id, enabled) },
+                        onSaveStatement = { viewModel.savePatientStatement(context, patient.id, true) },
                         onDelete = {
                             viewModel.deletePatient(patient)
                             Toast.makeText(context, "تم حذف المريض ${patient.name}", Toast.LENGTH_SHORT).show()
@@ -426,6 +433,9 @@ private fun PatientListItemCard(
     onCall: () -> Unit,
     onWhatsApp: () -> Unit,
     onSms: () -> Unit,
+    autoSaveEnabled: Boolean,
+    onAutoSaveChanged: (Boolean) -> Unit,
+    onSaveStatement: () -> Unit,
     onDelete: () -> Unit
 ) {
     val dateFmt = remember { SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()) }
@@ -505,6 +515,27 @@ private fun PatientListItemCard(
                             color = if (patient.remainingBalance > 0) ClinicDebtRemainingGreen else ClinicTealPrimary
                         )
                     )
+                }
+            }
+
+            // حفظ كشف الحساب الخاص بالمريض
+            Row(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(ClinicDarkSurfaceVariant).padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("الحفظ التلقائي", fontSize = 11.sp, color = ClinicTextPrimary, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Switch(checked = autoSaveEnabled, onCheckedChange = onAutoSaveChanged, modifier = Modifier.size(40.dp), colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = ClinicTealPrimary))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    IconButton(onClick = onSaveStatement, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.PictureAsPdf, contentDescription = "حفظ PDF", tint = ClinicError, modifier = Modifier.size(18.dp))
+                    }
+                    IconButton(onClick = onSaveStatement, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.TableView, contentDescription = "حفظ Excel", tint = ClinicDebtRemainingGreen, modifier = Modifier.size(18.dp))
+                    }
                 }
             }
 
