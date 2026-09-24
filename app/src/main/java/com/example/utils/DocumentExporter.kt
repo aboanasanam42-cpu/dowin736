@@ -177,6 +177,58 @@ object DocumentExporter {
         }
     }
 
+
+    fun exportPatientStatementToPdf(context: Context, patient: PatientWithTreatments, clinicName: String, currency: String): File? {
+        val document = PdfDocument()
+        val page = document.startPage(PdfDocument.PageInfo.Builder(595, 842, 1).create())
+        val canvas = page.canvas
+        canvas.drawColor(Color.WHITE)
+        val header = Paint().apply { color = Color.parseColor("#0F363A") }
+        canvas.drawRect(0f, 0f, 595f, 100f, header)
+        val title = Paint().apply { color = Color.WHITE; textSize = 20f; textAlign = Paint.Align.CENTER; isAntiAlias = true; typeface = Typeface.DEFAULT_BOLD }
+        canvas.drawText("كشف حساب المريض", 297f, 40f, title)
+        val sub = Paint().apply { color = Color.WHITE; textSize = 11f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
+        canvas.drawText(clinicName, 297f, 65f, sub)
+        canvas.drawText("تاريخ التقرير: " + dateFormat.format(Date()), 297f, 84f, sub)
+        val p = Paint().apply { color = Color.DKGRAY; textSize = 12f; textAlign = Paint.Align.RIGHT; isAntiAlias = true }
+        canvas.drawText("اسم المريض: ${patient.patient.name}", 555f, 135f, p)
+        canvas.drawText("الهاتف: ${patient.patient.phone}", 555f, 158f, p)
+        canvas.drawText("الإجمالي: ${patient.patient.totalAmount} $currency   الواصل: ${patient.patient.paidAmount} $currency   الباقي: ${patient.patient.remainingBalance} $currency", 555f, 181f, p)
+        val h = Paint().apply { color = Color.parseColor("#00695C") }
+        canvas.drawRect(30f, 205f, 565f, 232f, h)
+        val w = Paint().apply { color = Color.WHITE; textSize = 9f; textAlign = Paint.Align.RIGHT; isAntiAlias = true; typeface = Typeface.DEFAULT_BOLD }
+        canvas.drawText("التاريخ",555f,223f,w); canvas.drawText("البيان",450f,223f,w); canvas.drawText("الإجمالي",320f,223f,w); canvas.drawText("الواصل",220f,223f,w); canvas.drawText("الباقي",120f,223f,w)
+        val row = Paint().apply { color = Color.DKGRAY; textSize = 8.5f; textAlign = Paint.Align.RIGHT; isAntiAlias = true }
+        var y = 253f
+        patient.treatments.take(25).forEach { t ->
+            canvas.drawText(dateFormat.format(Date(t.timestamp)),555f,y,row); canvas.drawText(t.treatmentType.take(22),450f,y,row)
+            canvas.drawText(String.format(Locale.US,"%,.0f",t.totalAmount),320f,y,row); canvas.drawText(String.format(Locale.US,"%,.0f",t.paidAmount),220f,y,row); canvas.drawText(String.format(Locale.US,"%,.0f",t.remainingAmount),120f,y,row)
+            y += 22f
+        }
+        document.finishPage(page)
+        val dir = File(context.getExternalFilesDir(null), "patient_statements").apply { mkdirs() }
+        val safe = patient.patient.name.replace(Regex("[\\\\/:*?\"<>|]"), "_").trim().ifBlank { "مريض_${patient.patient.id}" }
+        val file = File(dir, "${safe}_كشف_الحساب.pdf")
+        return try { FileOutputStream(file).use { document.writeTo(it) }; document.close(); file } catch(e:Exception){ document.close(); null }
+    }
+
+    fun exportPatientStatementToExcel(context: Context, patient: PatientWithTreatments, clinicName: String, currency: String): File? {
+        val dir = File(context.getExternalFilesDir(null), "patient_statements").apply { mkdirs() }
+        val safe = patient.patient.name.replace(Regex("[\\\\/:*?\"<>|]"), "_").trim().ifBlank { "مريض_${patient.patient.id}" }
+        val file = File(dir, "${safe}_كشف_الحساب.xlsx")
+        fun esc(s:String)=s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;")
+        fun cell(s:String)="<c t=\"inlineStr\"><is><t>${esc(s)}</t></is></c>"
+        fun row(v:List<String>)="<row>${v.joinToString(""){cell(it)}}</row>"
+        val rows=mutableListOf(row(listOf("كشف حساب المريض",patient.patient.name)),row(listOf("العيادة",clinicName)),row(listOf("الهاتف",patient.patient.phone)),row(listOf("الإجمالي","${patient.patient.totalAmount} $currency","الواصل","${patient.patient.paidAmount} $currency","الباقي","${patient.patient.remainingBalance} $currency")),row(listOf("التاريخ","البيان","الإجمالي","الواصل","الباقي","الملاحظات")))
+        patient.treatments.forEach{t->rows+=row(listOf(dateFormat.format(Date(t.timestamp)),t.treatmentType,t.totalAmount.toString(),t.paidAmount.toString(),t.remainingAmount.toString(),t.notes))}
+        val types="""<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>"""
+        val rels="""<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>"""
+        val wb="""<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="كشف الحساب" sheetId="1" r:id="rId1"/></sheets></workbook>"""
+        val wbr="""<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>"""
+        val sheet="""<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${rows.joinToString("")}</sheetData></worksheet>"""
+        return try{java.util.zip.ZipOutputStream(FileOutputStream(file)).use{z->fun put(n:String,d:String){z.putNextEntry(java.util.zip.ZipEntry(n));z.write(d.toByteArray(StandardCharsets.UTF_8));z.closeEntry()};put("[Content_Types].xml",types);put("_rels/.rels",rels);put("xl/workbook.xml",wb);put("xl/_rels/workbook.xml.rels",wbr);put("xl/worksheets/sheet1.xml",sheet)};file}catch(e:Exception){null}
+    }
+
     /**
      * Exports Patients ledger to Excel (.csv format with UTF-8 BOM so Excel displays Arabic flawlessly)
      */
