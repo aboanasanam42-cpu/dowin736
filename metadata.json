@@ -1,0 +1,6 @@
+{
+  "name": "حسابات ديون المرضى لعيادة الرحمن",
+  "description": "نظام إدارة ومتابعة ديون المرضى والمعالجات مع إرسال الرسائل التلقائية والنسخ الاحتياطي لعيادة الرحمن",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

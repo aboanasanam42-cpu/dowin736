@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Medical Shield Background -->
+    <path
+        android:fillColor="#155D57"
+        android:pathData="M54,22 C68,22 78,28 78,38 C78,60 54,82 54,86 C54,82 30,60 30,38 C30,28 40,22 54,22 Z" />
+    
+    <!-- Medical Cross -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,34 h8 v14 h14 v8 h-14 v14 h-8 v-14 h-14 v-8 h14 Z" />
+
+    <!-- Cyan Accent Glow ring -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="2.5"
+        android:pathData="M54,22 C68,22 78,28 78,38 C78,60 54,82 54,86 C54,82 30,60 30,38 C30,28 40,22 54,22 Z" />
+
+    <!-- Ledger/Debt Currency badge in bottom right -->
+    <path
+        android:fillColor="#00BFA5"
+        android:pathData="M66,62 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0" />
+    <!-- Dollar / Currency Symbol inside badge -->
+    <path
+        android:fillColor="#003831"
+        android:pathData="M78,54 v16 M75,57 h5 a2.5,2.5 0 0,1 0,5 h-4 a2.5,2.5 0 0,0 0,5 h5"
+        android:strokeColor="#003831"
+        android:strokeWidth="1.8" />
+</vector>

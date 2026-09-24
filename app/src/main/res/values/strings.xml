@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">حسابات ديون المرضى لعيادة الرحمن</string>
+    <string name="clinic_name_default">عيادة الرحمن التخصصية</string>
+    <string name="doctor_name_default">د. الرحمن</string>
+    <string name="currency_default">ريال يمني</string>
+    <string name="tab_home">الرئيسية</string>
+    <string name="tab_patients">المرضى</string>
+    <string name="tab_reminders">التقويم</string>
+    <string name="tab_settings">الإعدادات</string>
+    <string name="patient_name_label">اسم المريض</string>
+    <string name="phone_number_label">رقم الهاتف</string>
+    <string name="treatment_type_label">إجمالي نوع المعالجة</string>
+    <string name="total_amount_label">إجمالي المبلغ</string>
+    <string name="paid_amount_label">الواصل</string>
+    <string name="remaining_amount_label">الباقي</string>
+    <string name="auto_sms_header">ضبط الرسائل والتذكير تلقائياً</string>
+    <string name="time_label">الوقت</string>
+    <string name="date_label">التاريخ</string>
+    <string name="day_label">اليوم</string>
+    <string name="repeat_weekly">تكرار أسبوعياً</string>
+    <string name="repeat_monthly">تكرار شهرياً</string>
+    <string name="sms_content_label">مربع إدخال نص الرسالة يدوياً</string>
+    <string name="activate_sms_button">تفعيل إرسال الرسالة تلقائياً</string>
+    <string name="backup_section_header">نسخة الإحتياطية</string>
+    <string name="save_to_phone_backup">الحفظ في الهاتف (نسخة احتياطية)</string>
+    <string name="save_pdf">حفظ كـ PDF</string>
+    <string name="save_excel">حفظ كـ Excel</string>
+</resources>
