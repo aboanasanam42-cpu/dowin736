@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -286,7 +287,7 @@ class ClinicViewModel(application: Application) : AndroidViewModel(application) 
                     DocumentExporter.exportPatientsToExcel(context, currentList, clinicName.value, currency.value)
                 }
 
-                val msg = if (isMerge) {
+                autoSavePatientStatement(context, savedPatient.id)\n\n                val msg = if (isMerge) {
                     "تم بنجاح دمج الحساب مع المريض (${savedPatient.name}) وإضافة المعالجة. الرصيد المتبقي: ${String.format(Locale.US, "%,.0f", savedPatient.remainingBalance)} ${currency.value}"
                 } else {
                     "تم تسجيل المريض الجديد (${savedPatient.name}) وجدولة التذكير بنجاح!"
@@ -381,10 +382,41 @@ class ClinicViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    private fun autoSaveEnabled(patientId: Long): Boolean =
+        getApplication<Application>().getSharedPreferences("patient_export_settings", Context.MODE_PRIVATE)
+            .getBoolean("auto_$patientId", false)
+
+    fun isPatientAutoSaveEnabled(patientId: Long): Boolean = autoSaveEnabled(patientId)
+
+    fun setPatientAutoSave(patientId: Long, enabled: Boolean) {
+        getApplication<Application>().getSharedPreferences("patient_export_settings", Context.MODE_PRIVATE)
+            .edit().putBoolean("auto_$patientId", enabled).apply()
+        if (enabled) savePatientStatement(getApplication(), patientId, false)
+    }
+
+    fun savePatientStatement(context: Context, patientId: Long, share: Boolean = true) {
+        viewModelScope.launch {
+            val data = repository.getPatientWithTreatments(patientId).first()
+            if (data == null) {
+                Toast.makeText(context, "تعذر العثور على كشف المريض", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            val pdf = DocumentExporter.exportPatientStatementToPdf(context, data, clinicName.value, currency.value)
+            val excel = DocumentExporter.exportPatientStatementToExcel(context, data, clinicName.value, currency.value)
+            if (pdf != null && excel != null && share) {
+                DocumentExporter.shareFile(context, pdf, "application/pdf", "كشف حساب " + data.patient.name)
+            }
+        }
+    }
+
+    private fun autoSavePatientStatement(context: Context, patientId: Long) {
+        if (autoSaveEnabled(patientId)) savePatientStatement(context, patientId, false)
+    }
     // Add Payment to Existing Patient
     fun addPayment(patientId: Long, amount: Double, note: String, onDone: () -> Unit) {
         viewModelScope.launch {
             repository.addPayment(patientId, amount, note)
+            autoSavePatientStatement(getApplication(), patientId)
             onDone()
         }
     }
