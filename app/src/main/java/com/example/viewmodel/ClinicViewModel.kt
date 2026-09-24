@@ -287,7 +287,9 @@ class ClinicViewModel(application: Application) : AndroidViewModel(application) 
                     DocumentExporter.exportPatientsToExcel(context, currentList, clinicName.value, currency.value)
                 }
 
-                autoSavePatientStatement(context, savedPatient.id)\n\n                val msg = if (isMerge) {
+                autoSavePatientStatement(context, savedPatient.id)
+
+                val msg = if (isMerge) {
                     "تم بنجاح دمج الحساب مع المريض (${savedPatient.name}) وإضافة المعالجة. الرصيد المتبقي: ${String.format(Locale.US, "%,.0f", savedPatient.remainingBalance)} ${currency.value}"
                 } else {
                     "تم تسجيل المريض الجديد (${savedPatient.name}) وجدولة التذكير بنجاح!"
