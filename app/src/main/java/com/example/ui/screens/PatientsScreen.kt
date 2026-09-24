@@ -332,7 +332,8 @@ fun PatientsScreen(
                         },
                         autoSaveEnabled = viewModel.isPatientAutoSaveEnabled(patient.id),
                         onAutoSaveChanged = { enabled -> viewModel.setPatientAutoSave(patient.id, enabled) },
-                        onSaveStatement = { viewModel.savePatientStatement(context, patient.id, true) },
+                        onSavePdf = { viewModel.savePatientStatement(context, patient.id, "pdf", true) },
+                        onSaveExcel = { viewModel.savePatientStatement(context, patient.id, "excel", true) },
                         onDelete = {
                             viewModel.deletePatient(patient)
                             Toast.makeText(context, "تم حذف المريض ${patient.name}", Toast.LENGTH_SHORT).show()
@@ -435,7 +436,8 @@ private fun PatientListItemCard(
     onSms: () -> Unit,
     autoSaveEnabled: Boolean,
     onAutoSaveChanged: (Boolean) -> Unit,
-    onSaveStatement: () -> Unit,
+    onSavePdf: () -> Unit,
+    onSaveExcel: () -> Unit,
     onDelete: () -> Unit
 ) {
     val dateFmt = remember { SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()) }
@@ -530,10 +532,10 @@ private fun PatientListItemCard(
                     Switch(checked = autoSaveEnabled, onCheckedChange = onAutoSaveChanged, modifier = Modifier.size(40.dp), colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = ClinicTealPrimary))
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                    IconButton(onClick = onSaveStatement, modifier = Modifier.size(32.dp)) {
+                    IconButton(onClick = onSavePdf, modifier = Modifier.size(32.dp)) {
                         Icon(Icons.Default.PictureAsPdf, contentDescription = "حفظ PDF", tint = ClinicError, modifier = Modifier.size(18.dp))
                     }
-                    IconButton(onClick = onSaveStatement, modifier = Modifier.size(32.dp)) {
+                    IconButton(onClick = onSaveExcel, modifier = Modifier.size(32.dp)) {
                         Icon(Icons.Default.TableView, contentDescription = "حفظ Excel", tint = ClinicDebtRemainingGreen, modifier = Modifier.size(18.dp))
                     }
                 }
