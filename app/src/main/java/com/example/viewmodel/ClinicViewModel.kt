@@ -391,26 +391,32 @@ class ClinicViewModel(application: Application) : AndroidViewModel(application) 
     fun setPatientAutoSave(patientId: Long, enabled: Boolean) {
         getApplication<Application>().getSharedPreferences("patient_export_settings", Context.MODE_PRIVATE)
             .edit().putBoolean("auto_$patientId", enabled).apply()
-        if (enabled) savePatientStatement(getApplication(), patientId, false)
+        if (enabled) savePatientStatement(getApplication(), patientId, "pdf", false)
     }
 
-    fun savePatientStatement(context: Context, patientId: Long, share: Boolean = true) {
+    fun savePatientStatement(context: Context, patientId: Long, format: String = "pdf", share: Boolean = true) {
         viewModelScope.launch {
             val data = repository.getPatientWithTreatments(patientId).first()
             if (data == null) {
                 Toast.makeText(context, "تعذر العثور على كشف المريض", Toast.LENGTH_SHORT).show()
                 return@launch
             }
-            val pdf = DocumentExporter.exportPatientStatementToPdf(context, data, clinicName.value, currency.value)
-            val excel = DocumentExporter.exportPatientStatementToExcel(context, data, clinicName.value, currency.value)
-            if (pdf != null && excel != null && share) {
-                DocumentExporter.shareFile(context, pdf, "application/pdf", "كشف حساب " + data.patient.name)
+            val file = if (format == "excel") {
+                DocumentExporter.exportPatientStatementToExcel(context, data, clinicName.value, currency.value)
+            } else {
+                DocumentExporter.exportPatientStatementToPdf(context, data, clinicName.value, currency.value)
+            }
+            if (file != null) {
+                Toast.makeText(context, "تم حفظ كشف " + data.patient.name + " بصيغة " + if (format == "excel") "Excel" else "PDF", Toast.LENGTH_SHORT).show()
+                if (share) DocumentExporter.shareFile(context, file, if (format == "excel") "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" else "application/pdf", "كشف حساب " + data.patient.name)
+            } else {
+                Toast.makeText(context, "فشل حفظ كشف حساب المريض", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun autoSavePatientStatement(context: Context, patientId: Long) {
-        if (autoSaveEnabled(patientId)) savePatientStatement(context, patientId, false)
+        if (autoSaveEnabled(patientId)) savePatientStatement(context, patientId, "pdf", false)
     }
     // Add Payment to Existing Patient
     fun addPayment(patientId: Long, amount: Double, note: String, onDone: () -> Unit) {
