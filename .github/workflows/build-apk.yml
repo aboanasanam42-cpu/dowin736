@@ -77,6 +77,9 @@ jobs:
             echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/release-keystore.jks" >> $GITHUB_ENV
           fi
 
+      - name: Force CI debug signing for reliable installable APK
+        run: echo 'KEYSTORE_PATH=' >> "$GITHUB_ENV"
+
       - name: Build APK with Gradle
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
